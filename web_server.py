@@ -6,6 +6,14 @@ from watchdog.events import PatternMatchingEventHandler
 import threading
 import requests
 
+#
+# VSDL monitoring by Andrej Hostikar
+# (C)2015
+#
+# Web server ni zagnan, po potrebi spremeni parametre, sicer zaženi iz konzole
+#
+
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -14,16 +22,16 @@ def hello():
     return "Vremenska postaja Spodnji Slemen; vreme.htm monitoring"
 
 class MyEventHandler(PatternMatchingEventHandler):
-	def on_moved(self, event):
-		super(MyEventHandler, self).on_moved(event)
+	#def on_moved(self, event):
+		#super(MyEventHandler, self).on_moved(event)
 		#logging.info("File %s was just moved" % event.src_path)
 
-	def on_created(self, event):
-		super(MyEventHandler, self).on_created(event)
+	#def on_created(self, event):
+		#super(MyEventHandler, self).on_created(event)
 		#logging.info("File %s was just created" % event.src_path)
 
-	def on_deleted(self, event):
-		super(MyEventHandler, self).on_deleted(event)
+	#def on_deleted(self, event):
+		#super(MyEventHandler, self).on_deleted(event)
 		#logging.info("File %s was just deleted" % event.src_path)
 
 	def on_modified(self, event):
@@ -34,10 +42,10 @@ class MyEventHandler(PatternMatchingEventHandler):
 		with open(event.src_path,'r') as f:
 			for line in f:
 				data = line.split('|')
-				#for word in line.split('|'):
-				#	print(word) 
+				
 				if len(data) > 10:
 					try:
+						# poveži se na viltuš API in dobi podatke iz glavnega senzorja (id=11)
 						r = requests.get('http://ping.viltus.info/api.php?id=011&tempOnly=1')
 						api = r.text
 						api = api.split('|') 
@@ -56,17 +64,19 @@ class MyEventHandler(PatternMatchingEventHandler):
 						print('Dežja v zadnji uri: %s mm.' % format(data[12]))
 					else:
 						print('Senzor za dež se ne odziva!')
-					
+					# shrani podatke v bi.txt, ki jih bere BlueIris ... nastavit za vsako kamero posebej
 					with open('d:/vreme/blueiris.txt','w') as bi:
-						named_tuple = time.localtime() # get struct_time
-						time_string = time.strftime("%H:%M\n%d.%m.%y", named_tuple)
-						bi.write(api[0]+"°C\n"+api[1]+"%\n"+data[12]+" mm/u\n"+data[13]+" mm/d\n"+data[11]+" mm/r\n"+time_string)
+						trenutniCajt = time.localtime()
+						ura = time.strftime("%H:%M\n%d.%m.%y", trenutniCajt) #nastavi uro v normano obliko
+						bi.write(api[0]+"°C\n"+api[1]+"%\n"+data[12]+" mm/u\n"+data[13]+" mm/d\n"+data[11]+" mm/r\n"+ura)
 						bi.close()
 						print("Podatki shranjeni na D:/vreme/blueiris.txt")
 					print('\n\r\n\r')	
 		f.close()			
 """ 
-	podatki shranjeni iz vremenske postaje 
+	podatki shranjeni iz vremenske postaje morajo biti v obliki:
+	<!-- RAW |3,7|1020,0|Rainy|5,4|7,6|250|78,0|10. december 2009|20:59|Night|0|0|0|0:53|12:29|1.1.2010|-0,38|0| AHVP -->     
+	<!-- RAW |[Temperature1]|[SlpBarometer]|[StationForecast]|[GustSpeed]|[GustMax0]|[Direction]|[RH1]|[date]|[time]|[DayNight]|[RainRate]|[RainThisHour]|[RainThisDay]|[MoonRise]|[MoonSet]|[FullMoon]|[QnhRate]|[Uv]|[AppTemp1]|[TempRate1]|[DewPoint1]|[WindChill1]|[annualrain]|[RH8]|[Temperature8]|[RH10]|[Temperature10]|[Temperature0]|[RH0]|[Rain-1]|[Rain-2]|[Temp1Min0]|[Temp1Max0]|[Temp1Min-1]|[Temp1Max-1]|[Temp1Min-2]|[Temp1Max-2]|[CumTemp1Min-7]|[CumTemp1Max-7]| AHVP -->
 	
 	0 RAW|
 	1 [Temperature1]
@@ -129,12 +139,12 @@ def monitor(file_path=None):
     observer.join()
 
 if __name__ == "__main__":
-	print("Zaganjam monitoring vreme.htm ...")
+	print("Zaganjam monitoring za vreme.htm ...")
 	if len(sys.argv) > 1:
 		
 		path = sys.argv[1]
 		monitor(file_path=path.strip())
-    
+		# tu vklopi, če rabiš web strank za nadzor
 		#socketio.run(app, host='0.0.0.0', port=80, debug=True, threaded=True)
 		
 	else:
