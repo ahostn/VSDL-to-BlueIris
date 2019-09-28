@@ -1,5 +1,5 @@
 # BlueIrisUpdater
-Live chenkin and upadting temp to BlueIris
+Live monitoring and upadting data to BlueIris
 
 Program spremlja spremembe v vreme.htm, ki ga generira VSDL in shrani v bi.txt za prikaz na kameri.
 
