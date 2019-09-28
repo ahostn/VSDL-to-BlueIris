@@ -144,7 +144,7 @@ if __name__ == "__main__":
 		
 		path = sys.argv[1]
 		monitor(file_path=path.strip())
-		# tu vklopi, če rabiš web strank za nadzor
+		# tu vklopi, če rabiš web server za nadzor
 		#socketio.run(app, host='0.0.0.0', port=80, debug=True, threaded=True)
 		
 	else:
